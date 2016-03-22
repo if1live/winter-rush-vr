@@ -1,0 +1,13 @@
+{
+  "name": "webvr-game",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "lodash": "*",
+    "three": "^0.75.0"
+  }
+}

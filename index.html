@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>WebVR Game</title>
+  <meta charset="utf-8">
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <style>
+    body {
+      background-color: #000;
+      color: #FFF;
+      margin: 0px;
+      overflow: hidden;
+    }
+
+    #debug-text{
+      position:absolute;
+      top:60px;
+      color:#00FF00;
+      width:400px;
+    }
+  </style>
+</head>
+<body>
+  <div id="debug-text"></div>
+  <div id="container"></div>
+
+  <!-- 3rd party libraries -->
+  <script src="./node_modules/lodash/lodash.min.js"></script>
+  <script src="./node_modules/three/three.min.js"></script>
+  <script src="./node_modules/three/examples/js/effects/CardboardEffect.js"></script>
+  <script src="./node_modules/three/examples/js/libs/stats.min.js"></script>
+
+  <!-- custom library -->
+  <script src="./lib/atutil.js"></script>
+  <script src="./lib/ImprovedNoise.js"></script>
+
+  <!-- game source -->
+  <script src="./src/config.js"></script>
+  <script src="./src/tree.js"></script>
+  <script src="./src/present.js"></script>
+  <script src="./src/floor.js"></script>
+  <script src="./src/snow.js"></script>
+  <script src="./src/main.js"></script>
+</body>
+</html>
