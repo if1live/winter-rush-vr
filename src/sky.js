@@ -11,9 +11,9 @@ function Sky() {
 
   let planeGeometry = new THREE.PlaneGeometry( 800, 300,1,1 );
   let skyMesh = new THREE.Mesh( planeGeometry, skyMaterial );
-  skyMesh.scale.x = skyMesh.scale.y = 15;
-  skyMesh.position.z = -3600;
-  skyMesh.position.y = 1500;
+  skyMesh.scale.x = skyMesh.scale.y = 1.5;
+  skyMesh.position.z = -360;
+  skyMesh.position.y = 150;
 
   this.add(skyMesh);
 }

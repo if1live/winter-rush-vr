@@ -68,8 +68,8 @@ function Main() {
     scene.fog = new THREE.Fog(backgroundColor, Config.FLOOR_DEPTH/2, Config.FLOOR_DEPTH);
 
     var aspect = window.innerWidth / window.innerHeight;
-    camera = new THREE.PerspectiveCamera(75, aspect, 1, 10000);
-    camera.position.z = Config.FLOOR_DEPTH/2 - 300;
+    camera = new THREE.PerspectiveCamera(75, aspect, 1, 1000);
+    camera.position.z = Config.FLOOR_DEPTH/2 - 30;
 
     // initialize renderer
     renderer = new THREE.WebGLRenderer( { antialias: Config.antialias } );
@@ -79,9 +79,8 @@ function Main() {
     document.body.appendChild( renderer.domElement );
 
     // for devel
-    var axisHelper = new THREE.AxisHelper( 10000 );
-    scene.add( axisHelper );
-
+    //var axisHelper = new THREE.AxisHelper( 10000 );
+    //scene.add( axisHelper );
 
     // cardboard effect
     effect = new THREE.CardboardEffect( renderer );
@@ -148,25 +147,6 @@ function Main() {
 
     hueTime += game.speed() * game.speed() * 0.05;
     var hue = hueTime % 2 - 1; //put in range -1 to 1
-
-    /*
-    snow.animate();
-    sky.animate();
-    barGroup.animate();
-
-    var step = calcStep();
-    edgeTreeGroup.position.z = -step * Config.FLOOR_DEPTH;
-    floor.position.z = -step * Config.FLOOR_DEPTH;
-    if(floor.step() !== step) {
-      floor.nextStep();
-      console.log(`next floor step : ${step}`);
-    }
-    if(present.position.z > camera.position.z) {
-      present.nextStep();
-      console.log(`next present step : ${step}`);
-    }
-    present.animate();
-    */
 
     render();
   }
@@ -305,6 +285,7 @@ function Main() {
 
     scene: function() { return scene; },
     camera: function() { return camera; },
+    game: function() { return game; },
   };
 };
 

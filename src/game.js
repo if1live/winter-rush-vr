@@ -5,12 +5,12 @@ function getTimestamp() {
 
 
 function Game(main) {
-  const ACCEL = 2000;
-  const MAX_SPEED_ACCEL = 70;
-  const START_MAX_SPEED = 1500;
-  const FINAL_MAX_SPEED = 7000;
-  const SIDE_ACCEL = 500;
-  const MAX_SIDE_SPEED = 4000;
+  const ACCEL = 200;
+  const MAX_SPEED_ACCEL = 7;
+  const START_MAX_SPEED = 150;
+  const FINAL_MAX_SPEED = 700;
+  const SIDE_ACCEL = 50;
+  const MAX_SIDE_SPEED = 400;
 
   var scene = main.scene();
   var camera = main.camera();
@@ -36,31 +36,23 @@ function Game(main) {
   var cameraFollowingGroup;
   var treeGroup;
 
-  var moverGroup;
-
   function init() {
-    // TODO - begin
-    moverGroup = new THREE.Object3D();
-    scene.add( moverGroup );
-
     cameraFollowingGroup = new THREE.Object3D();
     scene.add(cameraFollowingGroup);
-
-    // TODO - end
 
     // lights
     // HemisphereLight(skyColorHex, groundColorHex, intensity)
     var hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x000000, 0.6);
     scene.add( hemisphereLight );
-    hemisphereLight.position.y = 300;
+    hemisphereLight.position.y = 30;
 
     //middle light
-    var centerLight = new THREE.PointLight( 0xFFFFFF, 0.8, 4500 );
+    var centerLight = new THREE.PointLight( 0xFFFFFF, 0.8, 450 );
     cameraFollowingGroup.add(centerLight);
     centerLight.position.z = Config.FLOOR_DEPTH/4;
-    centerLight.position.y = 500;
+    centerLight.position.y = 50;
 
-    var frontLight = new THREE.PointLight( 0xFFFFFF, 1, 2500 );
+    var frontLight = new THREE.PointLight( 0xFFFFFF, 1, 250 );
     cameraFollowingGroup.add(frontLight);
     frontLight.position.z = Config.FLOOR_DEPTH/2;
 
@@ -79,13 +71,12 @@ function Game(main) {
     // add floating present
     present = new Present();
     // TODO - dev
-    present.position.z = 1000;
-    present.position.x = -500;
-    moverGroup.add(present);
+    present.position.z = 100;
+    present.position.x = -50;
 
     // init snow and etc
     snow = new Snow();
-    moverGroup.add(snow);
+    scene.add(snow);
 
     sky = new Sky();
     cameraFollowingGroup.add(sky);
@@ -136,7 +127,7 @@ function Game(main) {
       camera.position.x += delta * slideSpeed;
 
       //TILT
-      camera.rotation.z = -slideSpeed * 0.000038;
+      camera.rotation.z = -slideSpeed * 0.00038;
 
     } else {
       //slow down after dead
@@ -145,9 +136,10 @@ function Game(main) {
 
     present.animate();
 
-    var camMoveDelta = delta * moveSpeed;
-    camera.position.z -= camMoveDelta;
-    cameraFollowingGroup.position.z -= camMoveDelta;
+    camera.position.z -= delta * moveSpeed;
+
+    cameraFollowingGroup.position.z -= delta * moveSpeed;
+    cameraFollowingGroup.position.x = camera.position.x;
 
     var step = calcStep();
     if(currStep != step) {
@@ -159,28 +151,20 @@ function Game(main) {
       floor.position.z = -currStep * Config.FLOOR_DEPTH;
       floor.nextStep();
 
-      var c = getTimestamp();
-      // TODO 수정할것. 성능문제
       treeGroup.nextStep();
-      var d = getTimestamp();
-
-      console.log('tree group : ' + (d-c));
-      console.log('---------');
     }
 
-    //if (moverGroup.position.z > 0){
-      //build new strip
-      //setFloorHeight();
-    //}
+    // 눈은 카메라의 위치를 계속 따라간다. 흘러가는 속도로 입체감을 조절
+    snow.position.z -= delta * moveSpeed;
+    snow.animate(this, delta);
 
-    snow.animate();
     sky.animate(this);
     barGroup.animate(this);
 
     // SIMPLE HIT DETECT
     if(Config.hitDetect) {
       var camPos = camera.position.clone();
-      camPos.z -= 200;
+      camPos.z -= 20;
 
       /*
       var p;
@@ -188,7 +172,7 @@ function Game(main) {
 
       p = presentGroup.position.clone();
       dist = p.distanceTo(camPos);
-      if (dist < 200 && !presentGroup.collided){
+      if (dist < 20 && !presentGroup.collided){
         //GOT POINT
         presentGroup.collided = true;
         WRMain.onScorePoint();
@@ -196,7 +180,7 @@ function Game(main) {
       */
 
       const treeStates = treeGroup.allOptions();
-      const treeHitCheckDist = 200;
+      const treeHitCheckDist = 20;
       for(let i = 0 ; i < treeStates.length ; i++) {
         let state = treeStates[i];
         let p = state.position;
@@ -273,7 +257,7 @@ function Game(main) {
   }
 
   function onGameEnd() {
-    moveSpeed = -1200;
+    moveSpeed = -120;
     maxSpeed = START_MAX_SPEED;
     playing = false;
     acceptInput = false;
@@ -298,6 +282,7 @@ function Game(main) {
       return leftDown;
     },
     speed: function() { return moveSpeed/FINAL_MAX_SPEED; },
+    absoluteSpeed: function() { return moveSpeed; },
     playing: function() { return playing; },
     acceptInput: function() { return acceptInput; },
   };

@@ -36,7 +36,7 @@ function makeEdgeTreeMesh(segments) {
     for(let i = 0 ; i < EDGE_TREE_COUNT ; i++) {
       const scale = 1.3;
       var z = Config.FLOOR_DEPTH * i/EDGE_TREE_COUNT - Config.FLOOR_DEPTH/2 + zOffset;
-      var x = Config.FLOOR_WIDTH / 2 + 300;
+      var x = Config.FLOOR_WIDTH / 2 + 30;
       options.push({ position: new THREE.Vector3(+x, 0, z), scale: scale });
       options.push({ position: new THREE.Vector3(-x, 0, z), scale: scale });
     }
@@ -46,16 +46,16 @@ function makeEdgeTreeMesh(segments) {
 }
 
 function makeTreeGeometry(treeColor, trunkColor, scale) {
-  const trunkHeight = 200;
-  const treeHeight = 1200;
+  const trunkHeight = 20;
+  const treeHeight = 120;
 
-  const trunkGeom = new THREE.CylinderGeometry(50, 50, trunkHeight, 8, 1, false);
-  const treeGeom = new THREE.CylinderGeometry(0, 250, treeHeight, 8, 1, false);
+  const trunkGeom = new THREE.CylinderGeometry(5, 5, trunkHeight, 8, 1, false);
+  const treeGeom = new THREE.CylinderGeometry(0, 25, treeHeight, 8, 1, false);
   fillGeometryVertexColors(treeGeom, treeColor);
   fillGeometryVertexColors(trunkGeom, trunkColor);
 
   var trunkMat = new THREE.Matrix4();
-  trunkMat.makeTranslation(0, -700, 0);
+  trunkMat.makeTranslation(0, -70, 0);
   treeGeom.merge(trunkGeom, trunkMat);
 
   var m1 = new THREE.Matrix4();

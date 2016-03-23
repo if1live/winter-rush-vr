@@ -3,17 +3,17 @@ var Config = {
   // debug toggles
   playSound: true,
   playMusic: false,
-  hitDetect: false,
+  hitDetect: true,
   showDebug: true,
   antialias: false,
 
   //const dimensions
   // size of floor in x direction
-  FLOOR_WIDTH: 3600,
+  FLOOR_WIDTH: 360,
   // size of floor in z direction
-  FLOOR_DEPTH: 7200,
+  FLOOR_DEPTH: 720,
   //z distance to move before recreating a new floor strip
-  MOVE_STEP: 500,
+  MOVE_STEP: 50,
 
   // render mode
   //renderMode: "cardboard",

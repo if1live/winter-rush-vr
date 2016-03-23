@@ -1,6 +1,6 @@
 const FLOOR_RES = 20;
-const FLOOR_YPOS = -300;
-const FLOOR_THICKNESS = 300;
+const FLOOR_YPOS = -30;
+const FLOOR_THICKNESS = 30;
 
 const floorMaterial = new THREE.MeshLambertMaterial({
   color: 0xCCCCCC, //diffuse
@@ -12,7 +12,7 @@ const floorMaterial = new THREE.MeshLambertMaterial({
 
 function makePlaneGeometry() {
   var floorGeometry = new THREE.PlaneGeometry(
-    Config.FLOOR_WIDTH + 3200, Config.FLOOR_DEPTH,
+    Config.FLOOR_WIDTH + 320, Config.FLOOR_DEPTH,
     FLOOR_RES, FLOOR_RES
   );
   var m = new THREE.Matrix4();
