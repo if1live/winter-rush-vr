@@ -47,6 +47,7 @@ function setFloorGeometryHeight(geometry, step) {
 
 function Floor() {
   THREE.Object3D.call(this);
+  this.type = 'Floor';
 
   var step = 0;
   var subGeometries = [

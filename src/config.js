@@ -12,7 +12,7 @@ var Config = {
   FLOOR_DEPTH: 7200, //size of floor in z direction
 
   // render mode
-  renderMode: "cardboard",
+  //renderMode: "cardboard",
 
   getRenderMode: function() {
     return this.renderMode || 'simple';

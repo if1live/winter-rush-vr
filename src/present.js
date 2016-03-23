@@ -10,31 +10,16 @@ const presentMaterial = new THREE.MeshPhongMaterial({
   opacity: 1.0
 });
 
+const presentGeom = new THREE.TetrahedronGeometry(100, 2);
+
 function Present() {
   THREE.Object3D.call(this);
 
-  var step = 1;
+  this.type = 'Present';
 
-  this.step = function() {
-    return step;
-  }
-  this.nextStep = function() {
-    step += 1;
+  this.step = -1;
+  this.nextStep();
 
-    var offset = -step * Config.FLOOR_DEPTH;
-    this.position.x = ATUtil.randomRange(-Config.FLOOR_WIDTH/2, Config.FLOOR_WIDTH/2);
-    this.position.z = ATUtil.randomRange(-Config.FLOOR_DEPTH/2, Config.FLOOR_DEPTH/2);
-    this.position.z += offset;
-
-  };
-
-  this.position.x = ATUtil.randomRange(-Config.FLOOR_WIDTH/2, Config.FLOOR_WIDTH/2);
-  this.position.z = ATUtil.randomRange(-Config.FLOOR_DEPTH/2, Config.FLOOR_DEPTH/2);
-
-  //this.position.x = 0;
-  //this.position.z = 2000;
-
-  const presentGeom = new THREE.TetrahedronGeometry(100, 2);
   const present = new THREE.Mesh( presentGeom, presentMaterial );
   this.add( present );
 
@@ -51,4 +36,13 @@ Present.prototype.constructor = Present;
 Present.prototype.animate = function(dt) {
   this.rotation.x += 0.01;
   this.rotation.y += 0.02;
+};
+
+Present.prototype.nextStep = function() {
+  this.step += 1;
+
+  var offset = -this.step * Config.FLOOR_DEPTH;
+  this.position.x = ATUtil.randomRange(-Config.FLOOR_WIDTH/2, Config.FLOOR_WIDTH/2);
+  this.position.z = ATUtil.randomRange(-Config.FLOOR_DEPTH/2, Config.FLOOR_DEPTH/2);
+  this.position.z += offset;
 };

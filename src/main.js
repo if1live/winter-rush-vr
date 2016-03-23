@@ -40,9 +40,10 @@ var Main = function() {
   var camera, scene, renderer;
   var effect;
 
-  var edgeTree;
+  var edgeTreeGroup;
   var floor;
-  var snow;
+
+  var snow, barGroup, sky;
 
   var cameraFollowingLights = [];
 
@@ -95,22 +96,35 @@ var Main = function() {
     //scene.add( axisHelper );
 
     // init tree
-    //var treeScale = ATUtil.randomRange(0.8,1.3);
+    var treeScale = ATUtil.randomRange(0.8,1.3);
+    var tree = new Tree(treeScale, 0);
+    tree.position.z = 1500;
+    tree.position.x = 500;
+    scene.add(tree);
+
 
     // add trees down the edges
-    edgeTree = new EdgeTree();
-    scene.add(edgeTree);
+    edgeTreeGroup = new EdgeTreeGroup();
+    scene.add(edgeTreeGroup);
 
     // init floor
     floor = new Floor();
     scene.add(floor);
 
-    // init snow
+    // init snow and etc
     snow = new Snow();
-    snow.init(scene, moverGroup);
+    moverGroup.add(snow);
+
+    sky = new Sky();
+    moverGroup.add(sky);
+
+    barGroup = new BarGroup();
+    moverGroup.add(barGroup);
 
     //add floating present
     present = new Present();
+    present.position.z = 1000;
+    present.position.x = -500;
     scene.add(present);
 
     // initialize renderer
@@ -154,7 +168,7 @@ var Main = function() {
       stats.update();
     }
 
-    var speed = -30;
+    var speed = 0;
     camera.position.z += speed;
     _.each(cameraFollowingLights, function(light) {
       light.position.z = camera.position.z;
@@ -162,9 +176,11 @@ var Main = function() {
     moverGroup.position.z = camera.position.z;
 
     snow.animate();
+    sky.animate();
+    barGroup.animate();
 
     var step = calcStep();
-    edgeTree.position.z = -step * Config.FLOOR_DEPTH;
+    edgeTreeGroup.position.z = -step * Config.FLOOR_DEPTH;
     floor.position.z = -step * Config.FLOOR_DEPTH;
     if(floor.step() !== step) {
       floor.nextStep();
@@ -198,7 +214,7 @@ var Main = function() {
   function showDebugInfo() {
     var msg = [
       `cam pos z : ${camera.position.z}`,
-      `edge tree pos z : ${edgeTree.position.z}`,
+      `edge tree pos z : ${edgeTreeGroup.position.z}`,
       `floor pos z : ${floor.position.z}`,
       `step : ${step}`,
     ].join('\n');

@@ -90,12 +90,24 @@ function makeTreeGroupMesh(options) {
   return tree;
 }
 
-function EdgeTree() {
+function EdgeTreeGroup() {
   THREE.Object3D.call(this);
+  this.type = 'EdgeTreeGroup';
 
   var mesh = makeEdgeTreeMesh([1, 0, -1]);
   this.add(mesh);
 }
 
-EdgeTree.prototype = Object.create( THREE.Object3D.prototype );
-EdgeTree.prototype.constructor = EdgeTree;
+EdgeTreeGroup.prototype = Object.create( THREE.Object3D.prototype );
+EdgeTreeGroup.prototype.constructor = EdgeTreeGroup;
+
+
+function Tree(scale, treeType) {
+  THREE.Object3D.call(this);
+  this.type = 'Tree';
+
+  var mesh = makeTree(scale, treeType);
+  this.add(mesh);
+}
+Tree.prototype = Object.create( THREE.Object3D.prototype );
+Tree.prototype.constructor = Tree;
