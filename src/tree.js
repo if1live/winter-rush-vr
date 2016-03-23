@@ -16,12 +16,13 @@ const treeMaterial = new THREE.MeshLambertMaterial({
 });
 
 const TREE_COLORS = [0x466310, 0x355B4B, 0x449469];
+//const TREE_COLORS = [0xff0000, 0x00ff00, 0x0000ff];
+const trunkColor = new THREE.Color(0x330000);
 
 function makeTree(scale, treeType) {
   const treeColor = new THREE.Color(TREE_COLORS[treeType % TREE_COLORS.length]);
-  const trunkColor = new THREE.Color(0x330000);
 
-  var geom = makeTreeGeometry(treeColor, trunkColor, scale);
+  var geom = makeScaledTreeGeometry(treeColor, trunkColor, scale);
   var tree = new THREE.Mesh(geom, treeMaterial);
 
   return tree;
@@ -45,7 +46,7 @@ function makeEdgeTreeMesh(segments) {
   return trees;
 }
 
-function makeTreeGeometry(treeColor, trunkColor, scale) {
+function makeTreeGeometry(treeColor, trunkColor) {
   const trunkHeight = 20;
   const treeHeight = 120;
 
@@ -58,9 +59,16 @@ function makeTreeGeometry(treeColor, trunkColor, scale) {
   trunkMat.makeTranslation(0, -70, 0);
   treeGeom.merge(trunkGeom, trunkMat);
 
-  var m1 = new THREE.Matrix4();
+  var m = new THREE.Matrix4();
   var centerY = (trunkHeight + treeHeight/2);
-  m1.makeTranslation(0, centerY * scale, 0);
+  m.makeTranslation(0, centerY, 0);
+
+  treeGeom.applyMatrix(m);
+  return treeGeom;
+}
+
+function makeScaledTreeGeometry(treeColor, trunkColor, scale) {
+  const geometry = makeTreeGeometry(treeColor, trunkColor);
 
   var m2 = new THREE.Matrix4();
   m2.makeScale(scale, scale, scale);
@@ -70,18 +78,19 @@ function makeTreeGeometry(treeColor, trunkColor, scale) {
   m3.makeTranslation(0, offset / scale, 0);
 
   var m = new THREE.Matrix4();
-  m.identity();
-  m.multiply(m1);
-  m.multiply(m2);
-  m.multiply(m3);
+  m = m.multiplyMatrices(m2, m3);
 
-  treeGeom.applyMatrix(m);
-  return treeGeom;
+  geometry.applyMatrix(m);
+  return geometry;
 }
 
-function makeTreeGroupGeometry(options) {
-  var geometry = new THREE.Geometry();
-  const trunkColor = new THREE.Color(0x330000);
+const basicTreeGeometries = _.map(TREE_COLORS, function(c) {
+  const treeColor = new THREE.Color(c);
+  return makeTreeGeometry(treeColor, trunkColor);
+});
+
+function makeTreeGroupGeometry(geometry, options) {
+  // new Geometry의 호출을 통제하려고 geometry를 밖에서 받음
   for(let i = 0 ; i < options.length ; i++) {
     const opt = options[i];
     const type = opt.type || 0;
@@ -95,7 +104,7 @@ function makeTreeGroupGeometry(options) {
 
     const treeColor = new THREE.Color(TREE_COLORS[type % TREE_COLORS.length]);
 
-    var geom = makeTreeGeometry(treeColor, trunkColor, s);
+    var geom = makeScaledTreeGeometry(treeColor, trunkColor, s);
 
     var m1 = new THREE.Matrix4();
     m1.makeTranslation(p.x, p.y, p.z);
@@ -107,11 +116,11 @@ function makeTreeGroupGeometry(options) {
     m.multiplyMatrices(m1, m2);
     geometry.merge(geom, m);
   }
-  return geometry;
 }
 
 function makeTreeGroupMesh(options) {
-  var geometry = makeTreeGroupGeometry(options);
+  var geometry = new THREE.Geometry();
+  makeTreeGroupGeometry(geometry, options);
   var tree = new THREE.Mesh(geometry, treeMaterial);
   return tree;
 }
@@ -138,73 +147,100 @@ function Tree(scale, treeType) {
 Tree.prototype = Object.create( THREE.Object3D.prototype );
 Tree.prototype.constructor = Tree;
 
+const TREE_COUNT = 10;
+//const TREE_COUNT = 1;
 
-function TreeGroup() {
+function TreeBatch() {
+  var self = this;
   THREE.Object3D.call(this);
-  this.type = 'TreeGroup';
+  this.type = 'TreeBatch';
 
-  this.step = 0;
+  this.trees = [];
+  _.each([-1, 0, 1], function(step, idx) {
+    for(let i = 0 ; i < TREE_COUNT ; i++) {
+      var scale = ATUtil.randomRange(0.8, 1.3);
+      //var matId = i % TREE_COLORS.length;
+      var matId = idx % TREE_COLORS.length;
+      var tree = makeTree(scale, matId);
+      self.resetTree(tree, step);
 
-  this.options = [
-    this.makeOptions(-1),
-    this.makeOptions(0),
-    this.makeOptions(1),
-  ];
-  var geometry = makeTreeGroupGeometry(_.flatten(this.options));
+      self.trees.push(tree);
+    }
+  });
+
+  var geometry = new THREE.Geometry();
+  _.each(this.trees, function(tree) {
+    geometry.merge(tree.geometry.clone());
+  });
   this.mesh = new THREE.Mesh(geometry, treeMaterial);
+  this.updateMesh(0);
+
   this.add(this.mesh);
 }
 
-TreeGroup.prototype = Object.create( THREE.Object3D.prototype );
-TreeGroup.prototype.constructor = TreeGroup;
+TreeBatch.prototype = Object.create( THREE.Object3D.prototype );
+TreeBatch.prototype.constructor = TreeBatch;
 
-TreeGroup.prototype.nextStep = function() {
-  this.step += 1;
-  //console.log('tree group next step : ' + this.step);
+TreeBatch.prototype.resetTree = function(tree, step) {
+  tree.collided = false;
+  tree.visible = true;
+  tree.step = step;
 
-  this.options[0] = this.options[1];
-  this.options[1] = this.options[2];
-  this.options[2] = this.makeOptions(this.step + 1);
-
-  this.updateMesh();
-}
-
-TreeGroup.prototype.makeOptions = function(step) {
-  const TREE_COUNT = 10;
   const zOffset = -step * Config.FLOOR_DEPTH;
 
-  var options = [];
-  for(let i = 0 ; i < TREE_COUNT ; i++) {
-    var scale = ATUtil.randomRange(0.8, 1.3);
-    var matId = i % TREE_COLORS.length;
+  var posi = Math.random();
+  var posj = Math.random();
+  tree.position.x = posj * Config.FLOOR_WIDTH - Config.FLOOR_WIDTH/2;
+  tree.position.z = (-(posi * Config.FLOOR_DEPTH) + Config.FLOOR_DEPTH/2) + zOffset;
+}
 
-    var posi = Math.random();
-    var posj = Math.random();
-    var position = new THREE.Vector3(
-      posj * Config.FLOOR_WIDTH - Config.FLOOR_WIDTH/2,
-      0,
-      (-(posi * Config.FLOOR_DEPTH) + Config.FLOOR_DEPTH/2) + zOffset
-    );
+TreeBatch.prototype.updateMesh = function(step) {
+  var geometry = this.mesh.geometry;
 
-    options.push({
-      position: position,
-      scale: scale,
-      type: matId,
-      visible: true,
-      collided: false,
-      rotationY: Math.random()*Math.PI*2,
-    });
+  var rootVerticesIdx = 0;
+  _.each(this.trees, function(tree) {
+    let treeGeometry = tree.geometry;
+    let p = tree.position;
+
+    for(let j = 0 ; j < treeGeometry.vertices.length ; j++) {
+      let vertIdx = rootVerticesIdx + j;
+      if(tree.visible) {
+        geometry.vertices[vertIdx].x = treeGeometry.vertices[j].x + p.x;
+        geometry.vertices[vertIdx].y = treeGeometry.vertices[j].y + p.y;
+        geometry.vertices[vertIdx].z = treeGeometry.vertices[j].z + p.z;
+      } else {
+        geometry.vertices[vertIdx].x = 0;
+        geometry.vertices[vertIdx].y = 0;
+        geometry.vertices[vertIdx].z = 0;
+      }
+    }
+    rootVerticesIdx += treeGeometry.vertices.length;
+  });
+
+  geometry.computeBoundingSphere();
+  geometry.verticesNeedUpdate = true;
+}
+
+TreeBatch.prototype.lowestStep = function() {
+  return _.minBy(this.trees, function(t) { return t.step; }).step;
+}
+TreeBatch.prototype.highestStep = function() {
+  return _.maxBy(this.trees, function(t) { return t.step; }).step;
+}
+
+TreeBatch.prototype.nextStep = function() {
+  var lowestStep = this.lowestStep();
+  var highestStep = this.highestStep();
+
+  var nextStep = highestStep + 1;
+  for(let i = 0 ; i < this.trees.length ; i++) {
+    if(this.trees[i].step === lowestStep) {
+      this.resetTree(this.trees[i], nextStep);
+    }
   }
-  return options;
-}
+  this.updateMesh(nextStep);
+  this.mesh.visible = true;
+  this.visible = true;
 
-TreeGroup.prototype.updateMesh = function() {
-  var geometry = makeTreeGroupGeometry(_.flatten(this.options));
-  this.mesh.geometry.dispose();
-  this.mesh.geometry = geometry;
-}
-
-TreeGroup.prototype.allOptions = function() {
-  var options = _.flatten(this.options);
-  return options;
+  //console.log(`tree group next step : ${lowestStep} -> ${nextStep}`);
 }

@@ -34,7 +34,7 @@ function Game(main) {
 
   // 카메라 따라서 움직이는 객체
   var cameraFollowingGroup;
-  var treeGroup;
+  var treeBatch;
 
   function init() {
     cameraFollowingGroup = new THREE.Object3D();
@@ -61,8 +61,8 @@ function Game(main) {
     scene.add(floor);
 
     // make trees
-    treeGroup = new TreeGroup();
-    scene.add(treeGroup);
+    treeBatch = new TreeBatch();
+    scene.add(treeBatch);
 
     // add trees down the edges
     edgeTreeGroup = new EdgeTreeGroup();
@@ -151,7 +151,7 @@ function Game(main) {
       floor.position.z = -currStep * Config.FLOOR_DEPTH;
       floor.nextStep();
 
-      treeGroup.nextStep();
+      treeBatch.nextStep();
     }
 
     // 눈은 카메라의 위치를 계속 따라간다. 흘러가는 속도로 입체감을 조절
@@ -179,17 +179,16 @@ function Game(main) {
       }
       */
 
-      const treeStates = treeGroup.allOptions();
       const treeHitCheckDist = 20;
-      for(let i = 0 ; i < treeStates.length ; i++) {
-        let state = treeStates[i];
-        let p = state.position;
+      for(let i = 0 ; i < treeBatch.trees.length ; i++) {
+        let tree = treeBatch.trees[i];
+        let p = tree.position;
 
         //can only hit trees if they are in front of you
         if (p.z < camPos.z && p.z > camPos.z - treeHitCheckDist){
           let distSquare = p.distanceToSquared(camPos);
-          if (distSquare < treeHitCheckDist * treeHitCheckDist && !state.collided ) {
-            state.collided = true;
+          if (distSquare < treeHitCheckDist * treeHitCheckDist && !tree.collided ) {
+            tree.collided = true;
             onGameEnd();
           }
         }
@@ -230,20 +229,19 @@ function Game(main) {
 
     // kill trees that are too close at the start
     let changed = false;
-    const treeStates = treeGroup.allOptions();
-    for(let i = 0; i < treeStates.length; i++) {
-      let state = treeStates[i];
-      let p = state.position;
+    for(let i = 0; i < treeBatch.trees.length; i++) {
+      let tree = treeBatch.trees[i];
+      let p = tree.position;
 
       if (p.z < camPos.z && p.z > camPos.z - Config.FLOOR_DEPTH/2){
-        state.collided = true;
-        state.visible = false;
+        tree.collided = true;
+        tree.visible = false;
         changed = true;
       }
     }
 
     if(changed) {
-      treeGroup.updateMesh();
+      treeBatch.updateMesh();
     }
   }
 

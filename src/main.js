@@ -7,6 +7,7 @@ function initStats() {
   return stats;
 }
 
+
 function initFullscreen(renderer) {
   // enable fullscreen feature
   renderer.domElement.addEventListener( 'click', function () {

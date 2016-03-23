@@ -103,7 +103,8 @@ function Floor() {
       }
     }
 
-    mesh.geometry.verticesNeedUpdate = true;
+    geometry.computeBoundingSphere();
+    geometry.verticesNeedUpdate = true;
   };
 
   this.nextStep();

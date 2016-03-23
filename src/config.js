@@ -16,7 +16,7 @@ var Config = {
   MOVE_STEP: 50,
 
   // render mode
-  //renderMode: "cardboard",
+  renderMode: "cardboard",
   getRenderMode: function() {
     return this.renderMode || 'simple';
   }
