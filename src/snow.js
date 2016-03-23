@@ -1,6 +1,10 @@
-var snowMaterial = new THREE.PointsMaterial( {
+const SNOW_COUNT = 400;
+const SNOW_EDGE = 100;
+const SNOW_TOP = 1600;
+const SNOW_BOTTOM = -300;
+
+const snowMaterial = new THREE.PointsMaterial( {
   size: 50,
-//  sizeAttenuation: true,
   map: new THREE.TextureLoader().load( "res/img/snow.png" ),
   transparent: true ,
   blending: THREE.AdditiveBlending,
@@ -8,24 +12,6 @@ var snowMaterial = new THREE.PointsMaterial( {
   opacity:0.7,
   depthWrite:false
 } );
-
-var barMaterial = new THREE.MeshBasicMaterial({
-  color: 0x0FF66FF,
-  blending: THREE.AdditiveBlending,
-  depthTest: false,
-  transparent: true,
-  opacity:.6,
-  sizeAttenuation: true,
-  side: THREE.DoubleSide,
-});
-
-
-
-
-const SNOW_COUNT = 400;
-const SNOW_EDGE = 100;
-const SNOW_TOP = 1600;
-const SNOW_BOTTOM = -300;
 
 function Snow() {
   THREE.Object3D.call(this);
@@ -92,5 +78,19 @@ Snow.prototype.animate = function() {
 
   }
 
+  snowGeometry.verticesNeedUpdate = true;
+}
+
+Snow.prototype.shift = function(moverGroup) {
+  var snowGeometry = this.snowGeometry;
+
+  for(let i = 0 ; i < SNOW_COUNT ; i++) {
+    var vert = snowGeometry.vertices[i];
+    vert.z += Config.MOVE_STEP;
+
+    if (vert.z + moverGroup.position.z > Config.FLOOR_DEPTH/2){
+      vert.z-= Config.FLOOR_DEPTH;
+    }
+  }
   snowGeometry.verticesNeedUpdate = true;
 }

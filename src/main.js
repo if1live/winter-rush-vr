@@ -3,7 +3,7 @@ function initStats() {
   stats.domElement.style.position = 'absolute';
   stats.domElement.style.top = '0px';
   stats.domElement.style.left = '0px';
-  document.querySelector("#container").appendChild(stats.domElement);
+  document.getElementById('container').appendChild(stats.domElement);
   return stats;
 }
 
@@ -22,110 +22,54 @@ function initFullscreen(renderer) {
   });
 }
 
-function fillGeometryVertexColors(geometry, color) {
-  const faceIndices = [ 'a', 'b', 'c' ];
-  for(let i = 0 ; i < geometry.faces.length ; i++) {
-    let f = geometry.faces[i];
-    for(let j = 0 ; j < 3 ; j++) {
-      let vertexIndex = f[ faceIndices[ j ] ];
-      let p = geometry.vertices[ vertexIndex ];
-      f.vertexColors[ j ] = color;
-    }
+function trace(text) {
+  function nl2br(text) {
+    return text.replace(/\n/g, '<br/>');
   }
+  var debugTextNode = document.getElementById('debug-text');
+  debugTextNode.innerHTML = nl2br(text);
 }
 
-var Main = function() {
+
+function Main() {
+  var game;
+
   var stats;
 
   var camera, scene, renderer;
   var effect;
 
-  var edgeTreeGroup;
-  var floor;
+  var hueTime = 0;
+  var fxParams = {
+    vignetteAmount: 0.8,
+    brightness: 0,
+    saturation: 0.5,
+  };
 
-  var snow, barGroup, sky;
+  var sndPickup;
+  var sndCollide;
+  var sndBest;
+  var sndMusic;
 
-  var cameraFollowingLights = [];
-
-  var presentGroup;
-  var moverGroup;
+  var isFirstGame = true;
 
   function init() {
     Config.showDebug = window.location.href.indexOf("?dev")  > -1;
 
-    if(Config.showDebug){
+    if(Config.showDebug) {
       stats = initStats();
     }
 
-    // initialize scene
-    scene = new THREE.Scene();
+    initControl();
+    initAudio();
 
-    // initialize fog
+    // init 3D
+    scene = new THREE.Scene();
     scene.fog = new THREE.Fog(backgroundColor, Config.FLOOR_DEPTH/2, Config.FLOOR_DEPTH);
 
-    // initialize camera
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+    var aspect = window.innerWidth / window.innerHeight;
+    camera = new THREE.PerspectiveCamera(75, aspect, 1, 10000);
     camera.position.z = Config.FLOOR_DEPTH/2 - 300;
-    camera.focalLength = camera.position.distanceTo( scene.position );
-    camera.lookAt( scene.position );
-
-    // lights
-    // HemisphereLight(skyColorHex, groundColorHex, intensity)
-    var hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x000000, 0.6);
-    scene.add( hemisphereLight );
-    hemisphereLight.position.y = 300;
-
-    //middle light
-    var centerLight = new THREE.PointLight( 0xFFFFFF, 0.8, 4500 );
-    scene.add(centerLight);
-    centerLight.position.z = Config.FLOOR_DEPTH/4;
-    centerLight.position.y = 500;
-
-    var frontLight = new THREE.PointLight( 0xFFFFFF, 1, 2500 );
-    scene.add(frontLight);
-    frontLight.position.z = Config.FLOOR_DEPTH/2;
-
-    cameraFollowingLights.push(centerLight);
-    cameraFollowingLights.push(frontLight);
-
-    moverGroup = new THREE.Object3D();
-    scene.add( moverGroup );
-
-    // for development helper
-    //var axisHelper = new THREE.AxisHelper( 10000 );
-    //scene.add( axisHelper );
-
-    // init tree
-    var treeScale = ATUtil.randomRange(0.8,1.3);
-    var tree = new Tree(treeScale, 0);
-    tree.position.z = 1500;
-    tree.position.x = 500;
-    scene.add(tree);
-
-
-    // add trees down the edges
-    edgeTreeGroup = new EdgeTreeGroup();
-    scene.add(edgeTreeGroup);
-
-    // init floor
-    floor = new Floor();
-    scene.add(floor);
-
-    // init snow and etc
-    snow = new Snow();
-    moverGroup.add(snow);
-
-    sky = new Sky();
-    moverGroup.add(sky);
-
-    barGroup = new BarGroup();
-    moverGroup.add(barGroup);
-
-    //add floating present
-    present = new Present();
-    present.position.z = 1000;
-    present.position.x = -500;
-    scene.add(present);
 
     // initialize renderer
     renderer = new THREE.WebGLRenderer( { antialias: Config.antialias } );
@@ -134,47 +78,78 @@ var Main = function() {
     renderer.setSize( window.innerWidth, window.innerHeight );
     document.body.appendChild( renderer.domElement );
 
-    // enable fullscreen feature
-    if(Config.getRenderMode() === 'cardboard') {
-      initFullscreen(renderer);
-    }
+    // for devel
+    var axisHelper = new THREE.AxisHelper( 10000 );
+    scene.add( axisHelper );
+
 
     // cardboard effect
     effect = new THREE.CardboardEffect( renderer );
     effect.setSize( window.innerWidth, window.innerHeight );
 
+    // enable fullscreen feature
+    if(Config.getRenderMode() === 'cardboard') {
+      initFullscreen(renderer);
+    }
+
     // resize
     window.addEventListener( 'resize', onWindowResize, false );
+
+    game = new Game(this);
+    game.init();
+
+    animate();
+
+    //fade in
+    TweenMax.fromTo(fxParams, 1, {brightness: -1}, {brightness:0, delay:0.5});
   }
 
   function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
+    let w = window.innerWidth;
+    let h = window.innerHeight;
+
+    camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    effect.setSize( window.innerWidth, window.innerHeight );
+
+    effect.setSize(w, h);
+    renderer.setSize(w, h);
   }
 
-  function calcStep() {
-    // 카메라 위치를 플레이어 위치로. 일단은 간단하니까
-    var posZ = camera.position.z;
-    var tmp = posZ + Config.FLOOR_DEPTH / 2;
-    var step = Math.abs(Math.floor(tmp / Config.FLOOR_DEPTH)) + 1;
-    return step;
+  function onGameStart() {
+    //score = 0;
+
+    if(typeof(sndMusic) !== 'undefined' && isFirstGame) {
+      sndMusic.play();
+    }
+    game.startGame(isFirstGame);
+    isFirstGame = false;
+  }
+
+  function onGameOver() {
+    playCollide();
+
+    hueTime = 0;
   }
 
   function animate() {
     requestAnimationFrame( animate );
-
+    game.animate();
     if (Config.showDebug){
       stats.update();
     }
 
-    var speed = 0;
-    camera.position.z += speed;
-    _.each(cameraFollowingLights, function(light) {
-      light.position.z = camera.position.z;
-    });
-    moverGroup.position.z = camera.position.z;
+    //faster = more hue amount and faster shifts
+    var hueAmount;
+    if(game.speed() < 0.5) {
+      hueAmount = 0;
+    } else {
+      hueAmount = (game.speed() - 0.5) * 2;
+    }
 
+    hueTime += game.speed() * game.speed() * 0.05;
+    var hue = hueTime % 2 - 1; //put in range -1 to 1
+
+    /*
     snow.animate();
     sky.animate();
     barGroup.animate();
@@ -190,12 +165,8 @@ var Main = function() {
       present.nextStep();
       console.log(`next present step : ${step}`);
     }
-
     present.animate();
-
-    if(Config.showDebug) {
-    //  showDebugInfo();
-    }
+    */
 
     render();
   }
@@ -211,33 +182,131 @@ var Main = function() {
     }
   }
 
-  function showDebugInfo() {
-    var msg = [
-      `cam pos z : ${camera.position.z}`,
-      `edge tree pos z : ${edgeTreeGroup.position.z}`,
-      `floor pos z : ${floor.position.z}`,
-      `step : ${step}`,
-    ].join('\n');
-    trace(msg);
+  function playCollide() {
+    if(typeof(sndCollide) !== 'undefined') {
+      sndCollide.play();
+    }
   }
 
-  var debugTextNode = document.querySelector('#debug-text');
-  function trace(text){
-    function nl2br(text) {
-      return text.replace(/\n/g, '<br/>');
-    }
-    if (Config.showDebug){
-      debugTextNode.innerHTML = nl2br(text);
+  function playScorePoint() {
+    if(typeof(sndPickup) !== 'undefined') {
+      sndPickup.play();
     }
   }
+
+  // howler 안에 isMuted() 같은 함수가 없다
+  // 그래서 재생 상태를 따로 관리
+  var musicMuted = false;
+  function toggleMusic() {
+    if(musicMuted) {
+      sndMusic.unmute();
+    } else {
+      sndMusic.mute();
+    }
+    musicMuted = !musicMuted;
+  }
+
+
+  function initAudio() {
+    if(Config.playSound) {
+      sndPickup = new Howl( {urls: ["res/audio/point.mp3"]});
+      sndCollide = new Howl({ urls: ["res/audio/hit.mp3"]});
+      sndBest = new Howl( {urls: ["res/audio/best.mp3"]});
+    }
+
+    if(Config.playMusic) {
+      sndMusic = new Howl( {urls: ["res/audio/rouet.mp3"], loop: true,});
+    }
+  }
+
+  function initControl() {
+    let lastEvent;
+
+    // https://css-tricks.com/snippets/javascript/javascript-keycodes/
+    const leftKey = 37;
+    const rightKey = 39;
+
+    document.onkeydown = function(event) {
+      if (lastEvent && lastEvent.keyCode == event.keyCode) {
+        return;
+      }
+
+      lastEvent = event;
+
+      if(!game.playing() && game.acceptInput()) {
+        onGameStart();
+      }
+
+      switch ( event.keyCode ) {
+      case rightKey:
+        game.rightDown(true);
+        break;
+      case leftKey:
+        game.leftDown( true);
+        break;
+      }
+    }
+
+    document.onkeyup = function(event) {
+      lastEvent = null;
+
+      switch ( event.keyCode ) {
+      case rightKey:
+        game.rightDown(false);
+        break;
+      case leftKey:
+        game.leftDown(false);
+        break;
+      }
+    }
+
+    document.ontouchstart = function(event) {
+      if(!game.playing() && game.acceptInput()){
+        onGameStart();
+      }
+
+      for(let i = 0; i <  event.touches.length; i++) {
+        event.preventDefault();
+        var xpos = event.touches[ i ].pageX;
+        if (xpos > window.innerWidth / 2){
+          game.rightDown(true);
+        } else {
+          game.leftDown(true);
+        }
+      }
+    }
+
+    document.ontouchend = function(event) {
+      for(  var i = 0; i <  event.changedTouches.length; i++) {
+        event.preventDefault();
+        var xpos = event.changedTouches[ i ].pageX;
+        if (xpos > window.innerWidth / 2){
+          game.rightDown(false);
+        }else{
+          game.leftDown( false);
+        }
+      }
+    }
+  }
+
 
   return {
-    init: init,
-    animate: animate,
-    trace: trace,
+    init,
+    trace,
+
+    playCollide,
+    playScorePoint,
+    toggleMusic,
+
+    onGameStart,
+    onGameOver,
+
+    fxParams,
+
+    scene: function() { return scene; },
+    camera: function() { return camera; },
   };
 };
 
 var main = new Main();
 main.init();
-main.animate();

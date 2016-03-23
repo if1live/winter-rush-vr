@@ -2,18 +2,21 @@
 var Config = {
   // debug toggles
   playSound: true,
-  playMusic: true,
-  hitDetect: true,
+  playMusic: false,
+  hitDetect: false,
   showDebug: true,
   antialias: false,
 
   //const dimensions
-  FLOOR_WIDTH: 3600, // size of floor in x direction
-  FLOOR_DEPTH: 7200, //size of floor in z direction
+  // size of floor in x direction
+  FLOOR_WIDTH: 3600,
+  // size of floor in z direction
+  FLOOR_DEPTH: 7200,
+  //z distance to move before recreating a new floor strip
+  MOVE_STEP: 500,
 
   // render mode
   //renderMode: "cardboard",
-
   getRenderMode: function() {
     return this.renderMode || 'simple';
   }

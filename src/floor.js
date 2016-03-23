@@ -9,14 +9,16 @@ const floorMaterial = new THREE.MeshLambertMaterial({
 });
 
 
-function makePlaneGeometry(step) {
+
+function makePlaneGeometry() {
   var floorGeometry = new THREE.PlaneGeometry(
     Config.FLOOR_WIDTH + 3200, Config.FLOOR_DEPTH,
     FLOOR_RES, FLOOR_RES
   );
-  setFloorGeometryHeight(floorGeometry, step);
+  var m = new THREE.Matrix4();
+  m.makeRotationX(Math.PI / 2);
+  floorGeometry.applyMatrix(m);
 
-  floorGeometry.step = step;
   return floorGeometry;
 };
 
@@ -32,14 +34,9 @@ function setFloorGeometryHeight(geometry, step) {
         j/FLOOR_RES * noiseScale,
         noiseSeed
       );
-      geometry.vertices[i * (FLOOR_RES + 1)+ j].z = noiseVal * FLOOR_THICKNESS;
+      geometry.vertices[i * (FLOOR_RES + 1)+ j].y = noiseVal * FLOOR_THICKNESS;
     }
   }
-
-  // noise로 좌표를 조정한 다음에 회전을 걸어야 의도한대로 돌아갈것이다
-  var m = new THREE.Matrix4();
-  m.makeRotationX(Math.PI / 2);
-  geometry.applyMatrix(m);
 
   geometry.verticesNeedUpdate = true;
 }
@@ -49,13 +46,25 @@ function Floor() {
   THREE.Object3D.call(this);
   this.type = 'Floor';
 
-  var step = 0;
+  var step = -1;
   var subGeometries = [
-    makePlaneGeometry(step),
-    makePlaneGeometry(step+1),
-    makePlaneGeometry(step+2),
+    makePlaneGeometry(),
+    makePlaneGeometry(),
+    makePlaneGeometry(),
   ];
+  setFloorGeometryHeight(subGeometries[0], 0);
+  setFloorGeometryHeight(subGeometries[1], 1);
+  setFloorGeometryHeight(subGeometries[2], 2);
+
   var geometry = new THREE.Geometry();
+  var m = new THREE.Matrix4();
+  m.makeTranslation(0, 0, Config.FLOOR_DEPTH * 1);
+  geometry.merge(subGeometries[0], m);
+  m.makeTranslation(0, 0, Config.FLOOR_DEPTH * 0);
+  geometry.merge(subGeometries[1], m);
+  m.makeTranslation(0, 0, Config.FLOOR_DEPTH * -1);
+  geometry.merge(subGeometries[2], m);
+
   var mesh = new THREE.Mesh(geometry, floorMaterial);
   this.add(mesh);
 
@@ -66,37 +75,35 @@ function Floor() {
   this.nextStep = function() {
     step += 1;
 
-    subGeometries[0].dispose();
-
+    var tmpSubGeom = subGeometries[0];
+    setFloorGeometryHeight(tmpSubGeom, step+3);
     subGeometries[0] = subGeometries[1];
     subGeometries[1] = subGeometries[2];
-    subGeometries[2] = makePlaneGeometry(step + 2);
+    subGeometries[2] = tmpSubGeom;
 
-    function mergeSubGeometry(geometry, subGeometries) {
-      // clear previous geometry
-      geometry.vertices.length = 0;
-      geometry.faces.length = 0;
-      geometry.faceVertexUvs[0].length = 0;
+    var startIdx = [
+      0,
+      subGeometries[0].vertices.length,
+      subGeometries[0].vertices.length + subGeometries[1].vertices.length,
+    ];
+    var offsets = [
+      Config.FLOOR_DEPTH * 1,
+      Config.FLOOR_DEPTH * 0,
+      Config.FLOOR_DEPTH * -1,
+    ];
 
-      var m = new THREE.Matrix4();
+    for(let j = 0 ; j < startIdx.length  ; j++) {
+      for(let i = 0 ; i < subGeometries[j].vertices.length ; i++) {
+        var base = startIdx[j];
+        var src = subGeometries[j].vertices[i];
 
-      m.makeTranslation(0, 0, Config.FLOOR_DEPTH * 1);
-      geometry.merge(subGeometries[0], m);
-
-      m.makeTranslation(0, 0, Config.FLOOR_DEPTH * 0);
-      geometry.merge(subGeometries[1], m);
-
-      m.makeTranslation(0, 0, Config.FLOOR_DEPTH * -1);
-      geometry.merge(subGeometries[2], m);
-
-      return geometry;
+        mesh.geometry.vertices[i + base].x = src.x;
+        mesh.geometry.vertices[i + base].y = src.y;
+        mesh.geometry.vertices[i + base].z = src.z + offsets[j];
+      }
     }
 
-    var geometry = new THREE.Geometry();
-    mergeSubGeometry(geometry, subGeometries);
-    geometry.verticesNeedUpdate = true;
-    mesh.geometry.dispose();
-    mesh.geometry = geometry;
+    mesh.geometry.verticesNeedUpdate = true;
   };
 
   this.nextStep();
