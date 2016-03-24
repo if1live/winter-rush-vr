@@ -6,6 +6,7 @@ var Config = {
   hitDetect: true,
   showDebug: true,
   antialias: false,
+  useWakelock: false,
 
   //const dimensions
   // size of floor in x direction

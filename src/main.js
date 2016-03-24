@@ -41,6 +41,9 @@ function Main() {
 
   var isFirstGame = true;
 
+  var buttons = new ButtonManager();
+  buttons.setMode(0);
+
   function init() {
     Config.showDebug = window.location.href.indexOf("?dev")  > -1;
 
@@ -73,6 +76,20 @@ function Main() {
 
     // resize
     window.addEventListener( 'resize', onWindowResize, false );
+
+    // button
+    buttons.on('fs', function() {
+      buttons.setMode(1);
+      Util.fullscreenRequest();
+    });
+    buttons.on('settings', function() {
+      // TOOD settings 건드릴수 있는 페이지로 이동
+      console.log('TODO move settings');
+    });
+    buttons.on('back', function() {
+      buttons.setMode(0);
+      Util.fullscreenExit();
+    });
 
     initControl();
     initAudio();
@@ -224,8 +241,6 @@ function Main() {
     }
 
     renderer.domElement.ontouchstart = function(event) {
-      Util.fullscreenRequest();
-
       if(!game.playing() && game.acceptInput()){
         onGameStart();
       }

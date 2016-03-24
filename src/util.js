@@ -133,6 +133,9 @@ Util.webglDetect = function(return_context) {
   return false;
 };
 
+var wakelock = new NoSleep();
+var wakelockEnabled = false;
+
 Util.fullscreenRequest = function() {
   var canvas = document.body;
   if ( canvas.requestFullscreen ) {
@@ -143,6 +146,11 @@ Util.fullscreenRequest = function() {
     canvas.mozRequestFullScreen();
   } else if ( canvas.webkitRequestFullscreen ) {
     canvas.webkitRequestFullscreen();
+  }
+
+  if(Config.useWakelock && !wakelockEnabled) {
+    wakelock.enable();
+    wakelockEnabled = true;
   }
 };
 
@@ -156,6 +164,11 @@ Util.fullscreenExit = function() {
     document.webkitExitFullscreen();
   } else if (document.msExitFullscreen) {
     document.msExitFullscreen();
+  }
+
+  if(Config.useWakelock && wakelockEnabled) {
+    wakelock.disable();
+    wakelockEnabled = false;
   }
 };
 
