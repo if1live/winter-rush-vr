@@ -23,10 +23,8 @@ const trunkColor = new THREE.Color(0x330000);
 
 function makeTree(scale, treeType) {
   const treeColor = new THREE.Color(TREE_COLORS[treeType % TREE_COLORS.length]);
-
   var geom = makeScaledTreeGeometry(treeColor, trunkColor, scale);
   var tree = new THREE.Mesh(geom, treeMaterial);
-
   return tree;
 }
 
@@ -160,12 +158,11 @@ function TreeBatch() {
   this.trees = [];
   _.each([-1, 0, 1], function(step, idx) {
     for(let i = 0 ; i < TREE_COUNT ; i++) {
-      var scale = ATUtil.randomRange(0.8, 1.3);
-      //var matId = i % TREE_COLORS.length;
-      var matId = idx % TREE_COLORS.length;
-      var tree = makeTree(scale, matId);
-      self.resetTree(tree, step);
-
+      var matId = i % TREE_COLORS.length;
+      //var matId = idx % TREE_COLORS.length;
+      var tree = makeTree(1, matId);
+      tree.step = step;
+      tree.groupId = (step + 3) % 3;
       self.trees.push(tree);
     }
   });
@@ -175,7 +172,8 @@ function TreeBatch() {
     geometry.merge(tree.geometry.clone());
   });
   this.mesh = new THREE.Mesh(geometry, treeMaterial);
-  this.updateMesh(0);
+
+  this.step(0);
 
   this.add(this.mesh);
 }
@@ -183,17 +181,23 @@ function TreeBatch() {
 TreeBatch.prototype = Object.create( THREE.Object3D.prototype );
 TreeBatch.prototype.constructor = TreeBatch;
 
-TreeBatch.prototype.resetTree = function(tree, step) {
+TreeBatch.prototype.resetTree = function(tree, step, rng) {
   tree.collided = false;
   tree.visible = true;
   tree.step = step;
 
   const zOffset = -step * Config.FLOOR_DEPTH;
 
-  var posi = Math.random();
-  var posj = Math.random();
+  var posi = rng();
+  var posj = rng();
   tree.position.x = posj * Config.FLOOR_WIDTH - Config.FLOOR_WIDTH/2;
   tree.position.z = (-(posi * Config.FLOOR_DEPTH) + Config.FLOOR_DEPTH/2) + zOffset;
+
+  var scaleMin = 0.8;
+  var scaleMax = 1.3;
+
+  var scale = rng() * (scaleMax - scaleMin) + scaleMin;
+  tree.scale.set(scale, scale, scale);
 }
 
 TreeBatch.prototype.updateMesh = function(step) {
@@ -203,13 +207,14 @@ TreeBatch.prototype.updateMesh = function(step) {
   _.each(this.trees, function(tree) {
     let treeGeometry = tree.geometry;
     let p = tree.position;
+    let s = tree.scale;
 
     for(let j = 0 ; j < treeGeometry.vertices.length ; j++) {
       let vertIdx = rootVerticesIdx + j;
       if(tree.visible) {
-        geometry.vertices[vertIdx].x = treeGeometry.vertices[j].x + p.x;
-        geometry.vertices[vertIdx].y = treeGeometry.vertices[j].y + p.y;
-        geometry.vertices[vertIdx].z = treeGeometry.vertices[j].z + p.z;
+        geometry.vertices[vertIdx].x = treeGeometry.vertices[j].x * s.x + p.x;
+        geometry.vertices[vertIdx].y = treeGeometry.vertices[j].y * s.y + p.y;
+        geometry.vertices[vertIdx].z = treeGeometry.vertices[j].z * s.z + p.z;
       } else {
         geometry.vertices[vertIdx].x = 0;
         geometry.vertices[vertIdx].y = 0;
@@ -230,19 +235,26 @@ TreeBatch.prototype.highestStep = function() {
   return _.maxBy(this.trees, function(t) { return t.step; }).step;
 }
 
-TreeBatch.prototype.nextStep = function() {
-  var lowestStep = this.lowestStep();
-  var highestStep = this.highestStep();
+TreeBatch.prototype.step = function(step) {
+  var prev = this.lowestStep() + 1;
+  //console.log(`tree group next step : ${prev} -> ${step}`);
 
-  var nextStep = highestStep + 1;
+  var steps = [
+    { next: step-1, rng: new Math.seedrandom(step-1), },
+    { next: step, rng: new Math.seedrandom(step), },
+    { next: step+1, rng: new Math.seedrandom(step+1), },
+  ];
+
   for(let i = 0 ; i < this.trees.length ; i++) {
-    if(this.trees[i].step === lowestStep) {
-      this.resetTree(this.trees[i], nextStep);
+    let found = false;
+    for(let j = 0 ; j < steps.length ; j++) {
+      if(found) { break; }
+      if(this.trees[i].groupId === (steps[j].next + 3) % 3) {
+        this.resetTree(this.trees[i], steps[j].next, steps[j].rng);
+        found = true;
+      }
     }
   }
-  this.updateMesh(nextStep);
-  this.mesh.visible = true;
-  this.visible = true;
 
-  //console.log(`tree group next step : ${lowestStep} -> ${nextStep}`);
+  this.updateMesh(step);
 }

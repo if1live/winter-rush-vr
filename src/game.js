@@ -72,9 +72,7 @@ function Game(main) {
 
     // add floating present
     present = new Present();
-    // TODO - dev
-    present.position.z = 100;
-    present.position.x = -50;
+    //scene.add(present);
 
     // init snow and etc
     snow = new Snow();
@@ -153,7 +151,7 @@ function Game(main) {
       floor.position.z = -currStep * Config.FLOOR_DEPTH;
       floor.nextStep();
 
-      treeBatch.nextStep();
+      treeBatch.step(step);
     }
 
     // 눈은 카메라의 위치를 계속 따라간다. 흘러가는 속도로 입체감을 조절

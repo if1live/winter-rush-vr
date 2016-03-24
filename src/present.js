@@ -39,8 +39,12 @@ Present.prototype.animate = function(dt) {
 };
 
 Present.prototype.nextStep = function() {
-  this.step += 1;
+  var currStep = this.step + 1;
+  this.setStep(this.step + 1);
+};
 
+Present.prototype.setStep = function(step) {
+  this.step = step;
   var offset = -this.step * Config.FLOOR_DEPTH;
   this.position.x = ATUtil.randomRange(-Config.FLOOR_WIDTH/2, Config.FLOOR_WIDTH/2);
   this.position.z = ATUtil.randomRange(-Config.FLOOR_DEPTH/2, Config.FLOOR_DEPTH/2);
