@@ -48,7 +48,6 @@ function Floor() {
   THREE.Object3D.call(this);
   this.type = 'Floor';
 
-  var step = -1;
   var subGeometries = [
     makePlaneGeometry(),
     makePlaneGeometry(),
@@ -70,18 +69,10 @@ function Floor() {
   var mesh = new THREE.Mesh(geometry, floorMaterial);
   this.add(mesh);
 
-  this.step = function() {
-    return step;
-  }
-
-  this.nextStep = function() {
-    step += 1;
-
-    var tmpSubGeom = subGeometries[0];
-    setFloorGeometryHeight(tmpSubGeom, step+3);
-    subGeometries[0] = subGeometries[1];
-    subGeometries[1] = subGeometries[2];
-    subGeometries[2] = tmpSubGeom;
+  this.step = function(step) {
+    setFloorGeometryHeight(subGeometries[0], step);
+    setFloorGeometryHeight(subGeometries[1], step+1);
+    setFloorGeometryHeight(subGeometries[2], step+2);
 
     var startIdx = [
       0,
@@ -109,7 +100,7 @@ function Floor() {
     geometry.verticesNeedUpdate = true;
   };
 
-  this.nextStep();
+  this.step(0);
   this.position.y = FLOOR_YPOS;
 }
 

@@ -142,14 +142,14 @@ function Game(main) {
     cameraFollowingGroup.position.x = camera.position.x;
 
     var step = calcStep();
-    if(currStep < step) {
+    if(currStep != step) {
       //console.log(`step : ${currStep} -> ${step}`);
-      currStep += 1;
+      currStep = step;
 
-      edgeTreeGroup.position.z = -currStep * Config.FLOOR_DEPTH;
+      edgeTreeGroup.position.z = -step * Config.FLOOR_DEPTH;
 
-      floor.position.z = -currStep * Config.FLOOR_DEPTH;
-      floor.nextStep();
+      floor.position.z = -step * Config.FLOOR_DEPTH;
+      floor.step(step);
 
       treeBatch.step(step);
     }
