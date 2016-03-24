@@ -92,6 +92,17 @@ function Main() {
       Util.fullscreenExit();
     });
 
+    function onFullscreenChange(e) {
+      if(Util.fullscreenStatus()) {
+        buttons.setMode(1);
+      } else {
+        buttons.setMode(0);
+      }
+    }
+    document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+    document.addEventListener('mozfullscreenchange', onFullscreenChange);
+    document.addEventListener('MSFullscreenChange', onFullscreenChange);
+
     initControl();
     initAudio();
 
