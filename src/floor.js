@@ -1,3 +1,5 @@
+'use strict';
+
 const FLOOR_RES = 20;
 const FLOOR_YPOS = -30;
 const FLOOR_THICKNESS = 30;

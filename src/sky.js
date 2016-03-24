@@ -1,3 +1,5 @@
+'use strict';
+
 var skyMaterial = new THREE.MeshBasicMaterial( {
   map: new THREE.TextureLoader().load( "res/img/xmas-sky.jpg" ),
   transparent:true,

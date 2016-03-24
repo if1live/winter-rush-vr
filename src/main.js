@@ -1,3 +1,5 @@
+'use strict';
+
 function initStats() {
   var stats = new Stats();
   stats.domElement.style.position = 'absolute';
@@ -7,21 +9,6 @@ function initStats() {
   return stats;
 }
 
-
-function initFullscreen(renderer) {
-  // enable fullscreen feature
-  renderer.domElement.addEventListener( 'click', function () {
-    if ( this.requestFullscreen ) {
-      this.requestFullscreen();
-    } else if ( this.msRequestFullscreen ) {
-      this.msRequestFullscreen();
-    } else if ( this.mozRequestFullScreen ) {
-      this.mozRequestFullScreen();
-    } else if ( this.webkitRequestFullscreen ) {
-      this.webkitRequestFullscreen();
-    }
-  });
-}
 
 function trace(text) {
   function nl2br(text) {
@@ -61,9 +48,6 @@ function Main() {
       stats = initStats();
     }
 
-    initControl();
-    initAudio();
-
     // init 3D
     scene = new THREE.Scene();
     scene.fog = new THREE.Fog(backgroundColor, Config.FLOOR_DEPTH/2, Config.FLOOR_DEPTH);
@@ -87,13 +71,11 @@ function Main() {
     effect = new THREE.CardboardEffect( renderer );
     effect.setSize( window.innerWidth, window.innerHeight );
 
-    // enable fullscreen feature
-    if(Config.getRenderMode() === 'cardboard') {
-      initFullscreen(renderer);
-    }
-
     // resize
     window.addEventListener( 'resize', onWindowResize, false );
+
+    initControl();
+    initAudio();
 
     game = new Game(this);
     game.init();
@@ -241,7 +223,7 @@ function Main() {
       }
     }
 
-    document.ontouchstart = function(event) {
+    renderer.domElement.ontouchstart = function(event) {
       if(!game.playing() && game.acceptInput()){
         onGameStart();
       }
@@ -257,7 +239,7 @@ function Main() {
       }
     }
 
-    document.ontouchend = function(event) {
+    renderer.domElement.ontouchend = function(event) {
       for(  var i = 0; i <  event.changedTouches.length; i++) {
         event.preventDefault();
         var xpos = event.changedTouches[ i ].pageX;
@@ -290,5 +272,8 @@ function Main() {
   };
 };
 
+if(!Util.webglDetect()) {
+  alert('WebGL not supported!');
+}
 var main = new Main();
 main.init();

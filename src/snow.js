@@ -1,3 +1,5 @@
+'use strict';
+
 const SNOW_COUNT = 400;
 const SNOW_EDGE = 10;
 const SNOW_TOP = 160;

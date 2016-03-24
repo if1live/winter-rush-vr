@@ -1,3 +1,5 @@
+'use strict';
+
 const BAR_COUNT = 20;
 
 const barMaterial = new THREE.MeshBasicMaterial({

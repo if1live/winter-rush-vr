@@ -1,3 +1,5 @@
+'use strict';
+
 function getTimestamp() {
   var d = new Date();
   return (d.getTime() + d.getMilliseconds() / 1000.0);

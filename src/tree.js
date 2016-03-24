@@ -1,3 +1,5 @@
+'use strict';
+
 function fillGeometryVertexColors(geometry, color) {
   const faceIndices = [ 'a', 'b', 'c' ];
   for(let i = 0 ; i < geometry.faces.length ; i++) {
