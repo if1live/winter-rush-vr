@@ -7,11 +7,11 @@ function getTimestamp() {
 
 
 function Game(main) {
-  const ACCEL = 200;
+  const ACCEL = 100;
   const MAX_SPEED_ACCEL = 7;
   const START_MAX_SPEED = 150;
-  const FINAL_MAX_SPEED = 700;
-  const SIDE_ACCEL = 50;
+  const FINAL_MAX_SPEED = 500;
+  const SIDE_ACCEL = 250;
   const MAX_SIDE_SPEED = 400;
 
   var scene = main.scene();
@@ -24,8 +24,7 @@ function Game(main) {
 
   var clock;
 
-  var rightDown = false;
-  var leftDown = false;
+  var turnScale = 0;
   var playing = false;
   var acceptInput = true;
 
@@ -106,12 +105,12 @@ function Game(main) {
       moveSpeed = Math.min(moveSpeed, maxSpeed);
 
       //right takes precedence
-      if(rightDown) {
-        slideSpeed += SIDE_ACCEL;
+      if(turnScale > 0) {
+        slideSpeed = SIDE_ACCEL * turnScale;
         slideSpeed = Math.min(slideSpeed, MAX_SIDE_SPEED);
 
-      } else if (leftDown) {
-        slideSpeed -= SIDE_ACCEL;
+      } else if (turnScale < 0) {
+        slideSpeed = SIDE_ACCEL * turnScale;
         slideSpeed = Math.max(slideSpeed, -MAX_SIDE_SPEED);
 
       } else {
@@ -122,14 +121,14 @@ function Game(main) {
       var nextx = camera.position.x + delta * slideSpeed;
 
       if (nextx > Config.FLOOR_WIDTH/2 || nextx < -Config.FLOOR_WIDTH/2){
-        slideSpeed = -slideSpeed;
+        slideSpeed = 0;
         main.playCollide();
       }
 
       camera.position.x += delta * slideSpeed;
 
       //TILT
-      camera.rotation.z = -slideSpeed * 0.00038;
+      //camera.rotation.z = -slideSpeed * 0.00038;
 
     } else {
       //slow down after dead
@@ -283,13 +282,9 @@ function Game(main) {
     startGame,
     resetField,
 
-    rightDown: function(b) {
-      if(typeof(b) !== 'undefined') { rightDown = b; }
-      return rightDown;
-    },
-    leftDown: function(b) {
-      if(typeof(b) !== 'undefined') { leftDown = b; }
-      return leftDown;
+    turnScale: function(v) {
+      if(typeof(v) !== 'undefined') { turnScale = v; }
+      return turnScale;
     },
     speed: function() { return moveSpeed/FINAL_MAX_SPEED; },
     absoluteSpeed: function() { return moveSpeed; },

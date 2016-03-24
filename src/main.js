@@ -12,7 +12,11 @@ function initStats() {
 
 function trace(text) {
   function nl2br(text) {
-    return text.replace(/\n/g, '<br/>');
+    if(typeof(text) === 'string') {
+      return text.replace(/\n/g, '<br/>');
+    } else {
+      return text;
+    }
   }
   var debugTextNode = document.getElementById('debug-text');
   debugTextNode.innerHTML = nl2br(text);
@@ -41,8 +45,10 @@ function Main() {
 
   var isFirstGame = true;
 
-  var buttons = new ButtonManager();
-  buttons.setMode(0);
+  var controls;
+  var vrController;
+  var sphere;
+  var initialDir;
 
   function init() {
     Config.showDebug = window.location.href.indexOf("?dev")  > -1;
@@ -78,6 +84,9 @@ function Main() {
     window.addEventListener( 'resize', onWindowResize, false );
 
     // button
+    var buttons = new ButtonManager();
+    buttons.setMode(0);
+
     buttons.on('fs', function() {
       buttons.setMode(1);
       //Util.fullscreenRequest(renderer.domElement);
@@ -106,6 +115,23 @@ function Main() {
     initControl();
     initAudio();
 
+    // VR control - start
+    vrController = new THREE.Object3D();
+    controls = new THREE.VRControls(vrController);
+
+    // TODO webvr의 센서 초기화가 끝날때까지 약간의 시간이 필요하다
+    // 언제 초기화가 끝나는지 아직 못찾아서 편법으로 대기시간을 주었다
+    setTimeout(function() {
+      resetInitialDirection();
+    }, 3000);
+
+    sphere = new THREE.Mesh(
+      new THREE.SphereGeometry(0.1, 8, 8),
+      new THREE.MeshNormalMaterial()
+    );
+    //scene.add(sphere);
+    // VR control - end
+
     game = new Game(this);
     game.init();
 
@@ -113,6 +139,14 @@ function Main() {
 
     //fade in
     TweenMax.fromTo(fxParams, 1, {brightness: -1}, {brightness:0, delay:0.5});
+  }
+
+  function resetInitialDirection() {
+    controls.update();
+    initialDir = new THREE.Vector3(0, 0, -1);
+    initialDir.applyQuaternion(vrController.quaternion);
+    initialDir.y = 0;
+    initialDir.normalize();
   }
 
   function onWindowResize() {
@@ -132,6 +166,7 @@ function Main() {
     if(typeof(sndMusic) !== 'undefined' && isFirstGame) {
       sndMusic.play();
     }
+    resetInitialDirection();
     game.startGame(isFirstGame);
     isFirstGame = false;
   }
@@ -144,7 +179,45 @@ function Main() {
 
   function animate() {
     requestAnimationFrame( animate );
+
+    controls.update();
     game.animate();
+
+    if(typeof(initialDir) !== 'undefined') {
+      var dir = new THREE.Vector3(0, 0, -1);
+      dir.applyQuaternion(vrController.quaternion);
+      dir.y = 0;
+      dir.normalize();
+
+      // vector normalized를 이미 거쳤기때문에 dot 결과가가 곧 cos
+      var dotVal = initialDir.dot(dir);
+      var crossVec = initialDir.clone();
+      crossVec.cross(dir);
+      var innerDegree = Math.acos(dotVal) * 180 / Math.PI;
+      if(crossVec.y > 0) {
+        innerDegree *= -1;
+      }
+
+      var allowDegSize = 20;
+      var deg = innerDegree;
+      if(deg < -allowDegSize) {
+        deg = -allowDegSize;
+      } else if(deg > allowDegSize) {
+        deg = allowDegSize;
+      }
+      var turn = deg / allowDegSize;
+      // TODO 좌우/강도 기반 입력이 가능하도록
+      /*
+      trace([
+        `v1: ${JSON.stringify(initialDir)}`,
+        `v2: ${JSON.stringify(dir)}`,
+        `deg: ${innerDegree}`,
+        `turn: ${turn}`,
+      ].join('\n'));
+      */
+      game.turnScale(turn);
+    }
+
     if (Config.showDebug){
       stats.update();
     }
@@ -231,10 +304,10 @@ function Main() {
 
       switch ( event.keyCode ) {
       case rightKey:
-        game.rightDown(true);
+        game.turnScale(1);
         break;
       case leftKey:
-        game.leftDown( true);
+        game.turnScale(-1);
         break;
       }
     }
@@ -244,10 +317,10 @@ function Main() {
 
       switch ( event.keyCode ) {
       case rightKey:
-        game.rightDown(false);
+        game.turnScale(0);
         break;
       case leftKey:
-        game.leftDown(false);
+        game.turnScale(0);
         break;
       }
     }
@@ -294,6 +367,7 @@ function Main() {
     onGameOver,
 
     fxParams,
+    vrController,
 
     scene: function() { return scene; },
     camera: function() { return camera; },

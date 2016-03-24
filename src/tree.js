@@ -147,7 +147,7 @@ function Tree(scale, treeType) {
 Tree.prototype = Object.create( THREE.Object3D.prototype );
 Tree.prototype.constructor = Tree;
 
-const TREE_COUNT = 10;
+const TREE_COUNT = 6;
 //const TREE_COUNT = 1;
 
 function TreeBatch() {
