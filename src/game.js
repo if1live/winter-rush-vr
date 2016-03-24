@@ -144,7 +144,7 @@ function Game(main) {
     cameraFollowingGroup.position.x = camera.position.x;
 
     var step = calcStep();
-    if(currStep != step) {
+    if(currStep < step) {
       //console.log(`step : ${currStep} -> ${step}`);
       currStep += 1;
 

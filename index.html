@@ -3,8 +3,10 @@
 <head>
   <title>WebVR Game</title>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0, shrink-to-fit=no">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <style>
     body {
       background-color: #000;
@@ -36,10 +38,11 @@
   <!-- custom library -->
   <script src="./lib/atutil.js"></script>
   <script src="./lib/ImprovedNoise.js"></script>
+  <script src="./lib/util.js"></script>
+  <script src="./lib/NoSleep.js"></script>
 
   <!-- game source -->
   <script src="./src/config.js"></script>
-  <script src="./src/util.js"></script>
   <script src="./src/tree.js"></script>
   <script src="./src/present.js"></script>
   <script src="./src/floor.js"></script>

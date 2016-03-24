@@ -224,6 +224,8 @@ function Main() {
     }
 
     renderer.domElement.ontouchstart = function(event) {
+      Util.fullscreenRequest();
+
       if(!game.playing() && game.acceptInput()){
         onGameStart();
       }
