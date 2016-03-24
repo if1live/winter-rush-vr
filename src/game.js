@@ -38,6 +38,8 @@ function Game(main) {
   var cameraFollowingGroup;
   var treeBatch;
 
+  var score = 0;
+
   function init() {
     cameraFollowingGroup = new THREE.Object3D();
     scene.add(cameraFollowingGroup);
@@ -72,7 +74,7 @@ function Game(main) {
 
     // add floating present
     present = new Present();
-    //scene.add(present);
+    scene.add(present);
 
     // init snow and etc
     snow = new Snow();
@@ -152,6 +154,10 @@ function Game(main) {
       floor.step(step);
 
       treeBatch.step(step);
+
+      if(step % 2 == 0) {
+        present.step(step + 1);
+      }
     }
 
     // 눈은 카메라의 위치를 계속 따라간다. 흘러가는 속도로 입체감을 조절
@@ -166,18 +172,22 @@ function Game(main) {
       var camPos = camera.position.clone();
       camPos.z -= 20;
 
-      /*
-      var p;
-      var dist;
-
-      p = presentGroup.position.clone();
-      dist = p.distanceTo(camPos);
-      if (dist < 20 && !presentGroup.collided){
+      let p = present.position.clone();
+      let dist = p.distanceTo(camPos);
+      if (dist < 20 && !present.collided){
         //GOT POINT
-        presentGroup.collided = true;
-        WRMain.onScorePoint();
+        score += 1;
+
+        // visible 속성을 이용해서 숨기면 순각적으로 끊기는것처럼 보인다
+        // 그래서 위치 변경으로 대응
+        //present.visible = false;
+        present.position.z = 10000;
+        present.collided = true;
+
+        console.log(`curr score : ${score}`);
+
+        main.playScorePoint();
       }
-      */
 
       const treeHitCheckDist = 20;
       for(let i = 0 ; i < treeBatch.trees.length ; i++) {
@@ -226,6 +236,8 @@ function Game(main) {
     //set tilt to 0
     slideSpeed = 0;
     camera.rotation.z = 0;
+
+    score = 0;
 
     // kill trees that are too close at the start
     let changed = false;

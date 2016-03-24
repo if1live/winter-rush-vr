@@ -136,16 +136,16 @@ Util.webglDetect = function(return_context) {
 var wakelock = new NoSleep();
 var wakelockEnabled = false;
 
-Util.fullscreenRequest = function() {
-  var canvas = document.body;
-  if ( canvas.requestFullscreen ) {
-    canvas.requestFullscreen();
-  } else if ( canvas.msRequestFullscreen ) {
-    canvas.msRequestFullscreen();
-  } else if ( canvas.mozRequestFullScreen ) {
-    canvas.mozRequestFullScreen();
-  } else if ( canvas.webkitRequestFullscreen ) {
-    canvas.webkitRequestFullscreen();
+Util.fullscreenRequest = function(domElement) {
+
+  if ( domElement.requestFullscreen ) {
+    domElement.requestFullscreen();
+  } else if ( domElement.msRequestFullscreen ) {
+    domElement.msRequestFullscreen();
+  } else if ( domElement.mozRequestFullScreen ) {
+    domElement.mozRequestFullScreen();
+  } else if ( domElement.webkitRequestFullscreen ) {
+    domElement.webkitRequestFullscreen();
   }
 
   if(Config.useWakelock && !wakelockEnabled) {

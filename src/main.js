@@ -60,9 +60,9 @@ function Main() {
     camera.position.z = Config.FLOOR_DEPTH/2 - 30;
 
     // initialize renderer
-    renderer = new THREE.WebGLRenderer( { antialias: Config.antialias } );
+    renderer = new THREE.WebGLRenderer({ antialias: Config.antialias });
     renderer.setClearColor( backgroundColor, 1 );
-    renderer.setPixelRatio( window.devicePixelRatio );
+    renderer.setPixelRatio(Config.devicePixelRatio());
     renderer.setSize( window.innerWidth, window.innerHeight );
     document.body.appendChild( renderer.domElement );
 
@@ -80,7 +80,8 @@ function Main() {
     // button
     buttons.on('fs', function() {
       buttons.setMode(1);
-      Util.fullscreenRequest();
+      //Util.fullscreenRequest(renderer.domElement);
+      Util.fullscreenRequest(document.body);
     });
     buttons.on('settings', function() {
       // TOOD settings 건드릴수 있는 페이지로 이동
@@ -152,7 +153,7 @@ function Main() {
   }
 
   function render() {
-    const renderMode = Config.getRenderMode();
+    const renderMode = Config.renderMode();
     if(renderMode === 'cardboard') {
       effect.render( scene, camera );
     } else if(renderMode === 'simple') {

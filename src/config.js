@@ -16,11 +16,17 @@ var Config = {
   //z distance to move before recreating a new floor strip
   MOVE_STEP: 50,
 
-  // render mode
-  renderMode: "cardboard",
-  getRenderMode: function() {
-    return this.renderMode || 'simple';
-  }
+  renderMode: function() {
+    let renderMode = "cardboard";
+    return renderMode || 'simple';
+  },
+  devicePixelRatio: function() {
+    var ratio = window.devicePixelRatio;
+    if(ratio > 2) {
+      ratio = 2;
+    }
+    return ratio;
+  },
 };
 
 const noiseScale = 3;

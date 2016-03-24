@@ -10,21 +10,20 @@ const presentMaterial = new THREE.MeshPhongMaterial({
   opacity: 1.0
 });
 
-const presentGeom = new THREE.TetrahedronGeometry(100, 2);
+const presentGeom = new THREE.TetrahedronGeometry(10, 2);
 
 function Present() {
   THREE.Object3D.call(this);
 
   this.type = 'Present';
 
-  this.step = -1;
-  this.nextStep();
+  this.step(0);
 
   const present = new THREE.Mesh( presentGeom, presentMaterial );
   this.add( present );
 
   //PointLight(hex, intensity, distance)
-  const presentLight = new THREE.PointLight( 0xFF00FF, 1.2, 600 );
+  const presentLight = new THREE.PointLight( 0xFF00FF, 1.2, 60 );
   this.add( presentLight );
 
   this.collided = false;
@@ -38,15 +37,11 @@ Present.prototype.animate = function(dt) {
   this.rotation.y += 0.02;
 };
 
-Present.prototype.nextStep = function() {
-  var currStep = this.step + 1;
-  this.setStep(this.step + 1);
-};
-
-Present.prototype.setStep = function(step) {
-  this.step = step;
-  var offset = -this.step * Config.FLOOR_DEPTH;
+Present.prototype.step = function(step) {
+  var offset = -step * Config.FLOOR_DEPTH;
   this.position.x = ATUtil.randomRange(-Config.FLOOR_WIDTH/2, Config.FLOOR_WIDTH/2);
   this.position.z = ATUtil.randomRange(-Config.FLOOR_DEPTH/2, Config.FLOOR_DEPTH/2);
   this.position.z += offset;
+
+  this.collided = false;
 };
